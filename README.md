@@ -51,6 +51,6 @@ AWS_SECRET_ACCESS_KEY=your_secret
 AWS_DEFAULT_REGION=ap-south-1
 
 # Run below command in terminal 
-flask run
+  flask run
 # Open your browser
   http://127.0.0.1:5000
