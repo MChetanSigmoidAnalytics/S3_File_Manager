@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="login-bg d-flex align-items-center justify-content-center min-vh-100">
+  <div class="glass-card shadow-lg border-0 rounded-4 p-4" style="max-width: 400px; width: 100%;">
+    <div class="card-body">
+      <div class="text-center mb-4">
+        <div class="mb-3">
+          <span class="d-inline-block rounded-circle p-4 shadow-lg" style="background: #fff; box-shadow: 0 4px 24px 0 rgba(128, 128, 156, 0.1);">
+            <i class="fas fa-cloud fa-3x" style="color: #cecee9;"></i>
+          </span>
+        </div>
+        <h2 class="fw-bold mb-1" style="letter-spacing:1px;">S3 File Manager</h2>
+        <p class="text-muted mb-0">Sign in to continue</p>
+      </div>
+      <form method="POST">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-0"><i class="fas fa-user"></i></span>
+            <input type="text" class="form-control border-0" id="username" name="username" required autofocus placeholder="Enter username">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light border-0"><i class="fas fa-lock"></i></span>
+            <input type="password" class="form-control border-0" id="password" name="password" required placeholder="Enter password">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gradient w-100 fw-semibold shadow-sm py-2 mt-2">
+          <i class="fas fa-sign-in-alt me-2"></i> Login
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+<style>
+  html, body {
+    height: 100vh;
+    overflow-y: hidden;
+  }
+  .login-bg {
+    background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);
+    min-height: 100vh;
+    height: 100vh;
+  }
+  .glass-card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 2rem !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .btn-gradient {
+    background: linear-gradient(90deg, #6366f1 0%, #60a5fa 100%);
+    color: #fff;
+    border: none;
+    transition: background 0.2s;
+  }
+  .btn-gradient:hover {
+    background: linear-gradient(90deg, #60a5fa 0%, #6366f1 100%);
+    color: #fff;
+  }
+</style>
+{% endblock %}

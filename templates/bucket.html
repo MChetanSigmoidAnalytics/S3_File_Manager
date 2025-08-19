@@ -1,0 +1,215 @@
+<style>
+  body.dark-mode {
+    background: #23272b !important;
+    color: #f3f3f3 !important;
+  }
+  body.dark-mode .card, body.dark-mode .table, body.dark-mode .navbar, body.dark-mode .modal-content {
+    background: #2d3238 !important;
+    color: #f3f3f3 !important;
+  }
+  body.dark-mode .table-dark {
+    background: #2d3238 !important;
+    color: #f3f3f3 !important;
+  }
+  body.dark-mode .btn, body.dark-mode .form-control {
+    background: #23272b !important;
+    color: #f3f3f3 !important;
+    border-color: #666 !important;
+  }
+  body.dark-mode .form-control::placeholder {
+    color: #bdbdbd !important;
+    opacity: 1 !important;
+  }
+  body.dark-mode .btn-danger, body.dark-mode .btn-primary {
+    color: #fff !important;
+  }
+</style>
+
+
+
+<!-- Dark Mode Toggle -->
+<button id="darkModeToggle" class="btn btn-outline-secondary position-fixed" style="top:1rem;right:1rem;z-index:2000;">
+  <i class="fas fa-moon"></i>
+</button>
+<script>
+// Dark mode toggle (logic is now global in layout.html)
+const darkModeBtn = document.getElementById('darkModeToggle');
+darkModeBtn.addEventListener('click', function() {
+  const enabled = !document.body.classList.contains('dark-mode');
+  if (enabled) {
+    document.body.classList.add('dark-mode');
+    darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+  } else {
+    document.body.classList.remove('dark-mode');
+    darkModeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+  }
+  localStorage.setItem('darkMode', enabled);
+});
+// On page load, sync toggle icon
+if (document.body.classList.contains('dark-mode')) {
+  darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+} else {
+  darkModeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+}
+</script>
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-bucket-fill"></i> Bucket: {{ bucket_name }}
+        </h2>
+
+        {% if prefix %}
+            {% set parent_prefix = '/'.join(prefix.strip('/').split('/')[:-1]) %}
+            <a href="{{ url_for('view_bucket', bucket_name=bucket_name, prefix=parent_prefix ~ ('/' if parent_prefix else '')) }}"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        {% else %}
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Buckets
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+
+    <!-- Upload Section -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-upload"></i> Upload File</h5>
+            <form action="{{ url_for('upload', bucket_name=bucket_name) }}" method="POST" enctype="multipart/form-data" class="d-flex gap-2">
+                <input type="file" name="file" class="form-control" required>
+                <input type="hidden" name="prefix" value="{{ prefix }}">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-cloud-arrow-up"></i> Upload
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- File List -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="card-title d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-files"></i> Files & Folders</span>
+                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#createFolderModal">
+                    <i class="bi bi-folder-plus"></i> Create Folder
+                </button>
+            </h5>
+            <table class="table table-hover align-middle mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th></th> <!-- Checkbox column -->
+                        <th>Name</th>
+                        <th>Size (bytes)</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for folder in folders %}
+                    <tr>
+                        
+                        <td>
+                            <a href="{{ url_for('view_bucket', bucket_name=bucket_name, prefix=folder.Prefix) }}">
+                                <i class="bi bi-folder-fill text-warning"></i>
+                                {{ folder.Prefix | replace(prefix, '') | trim('/') }}
+                            </a>
+                        </td>
+                        <td>—</td>
+                        <td class="text-center"></td>
+                    </tr>
+                    {% endfor %}
+                    {% for file in files %}
+                        {% if not file.Key.endswith('/') %}
+                        <tr>
+                           <td>
+                                  {% if file.Key.endswith('/') %}
+                                    <i class="bi bi-folder-fill text-warning"></i>
+                                {% else %}
+                                    <i class="bi bi-file-earmark"></i>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <i class="bi bi-file-earmark"></i>
+                                {{ file.Key | replace(prefix, '') }}
+                            </td>
+                            <td>{{ file.Size }}</td>
+                            <td class="text-center">
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    
+                                    <!-- Delete -->
+                                    <form action="{{ url_for('delete_file', bucket_name=bucket_name, key=file.Key) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this file? This action cannot be undone.');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                    <!-- Copy/Move -->
+                                    <form action="{{ url_for('copy_file', bucket_name=bucket_name, key=file.Key) }}" method="POST" class="d-flex gap-1 align-items-center">
+                                        <input type="text" name="dest_bucket" placeholder="Destination bucket" class="form-control form-control-sm" required>
+                                        <input type="text" name="dest_key" placeholder="Destination key (optional)" class="form-control form-control-sm">
+                                        <select name="action" class="form-select form-select-sm w-auto" required>
+                                            <option value="copy">Copy</option>
+                                            <option value="move">Move</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-arrow-left-right"></i> Go
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                    {% if not folders and not files %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No files or folders found in this bucket.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- Create Folder Modal -->
+<div class="modal fade" id="createFolderModal" tabindex="-1" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="{{ url_for('create_folder', bucket_name=bucket_name, prefix=prefix) }}" method="POST">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createFolderModalLabel"><i class="bi bi-folder-plus"></i> Create Folder</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="folder_name" class="form-control" required placeholder="Folder name">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-folder-plus"></i> Create
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+<script>
+  // Enable Bootstrap tooltips for bulbs and fields
+  document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>
+
+
+{% endblock %}
+
